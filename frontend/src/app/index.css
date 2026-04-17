@@ -1,0 +1,119 @@
+:root {
+  --color-page-background: #f5f7ff;
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f0f3ff;
+  --color-text-primary: #1d2433;
+  --color-text-secondary: #545f7e;
+  --color-text-muted: #7a86a8;
+  --color-icon-primary: #505a7a;
+  --color-accent-primary: #5b7cfa;
+  --color-accent-soft: #e9efff;
+  --color-border-soft: #dbe2fa;
+  --color-border-strong: #c8d1f4;
+  --color-divider: #c1c9e4;
+  --shadow-soft: 0 10px 30px rgba(80, 97, 154, 0.1);
+  --shadow-soft-hover: 0 14px 36px rgba(80, 97, 154, 0.16);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-page-background);
+  color: var(--color-text-primary);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.45;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+figure,
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+main {
+  min-width: 320px;
+  width: 100%;
+  max-width: 1330px;
+  margin: 0 auto 40px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--color-accent-primary);
+  --bs-btn-border-color: var(--color-accent-primary);
+  --bs-btn-hover-bg: #4f6eef;
+  --bs-btn-hover-border-color: #4f6eef;
+  --bs-btn-active-bg: #4463e5;
+  --bs-btn-active-border-color: #4463e5;
+  --bs-btn-border-radius: var(--radius-md);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--color-accent-primary);
+  --bs-btn-border-color: var(--color-accent-primary);
+  --bs-btn-hover-bg: var(--color-accent-soft);
+  --bs-btn-hover-border-color: var(--color-accent-primary);
+  --bs-btn-hover-color: var(--color-accent-primary);
+  --bs-btn-active-bg: var(--color-accent-soft);
+  --bs-btn-active-border-color: var(--color-accent-primary);
+  --bs-btn-active-color: var(--color-accent-primary);
+  --bs-btn-border-radius: var(--radius-md);
+}
+
+.btn-outline-secondary,
+.btn-secondary {
+  --bs-btn-border-radius: var(--radius-md);
+}
+
+.form-control,
+.form-select {
+  border-color: var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-primary);
+  color: var(--color-text-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 0.2rem rgba(91, 124, 250, 0.14);
+}
