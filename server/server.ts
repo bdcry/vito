@@ -289,26 +289,14 @@ const parseAnalyzeResponse = (rawResponse: string): TAnalyzeResult => {
   }
 };
 
-await fastify.register((await import('@fastify/middie')).default);
-
-// Искуственная задержка ответов, чтобы можно было протестировать состояния загрузки
-fastify.use((_, __, next) =>
-  new Promise(res => setTimeout(res, 300 + Math.random() * 700)).then(next),
-);
-
-// Настройка CORS
-fastify.use((request, reply, next) => {
-  reply.setHeader('Access-Control-Allow-Origin', '*');
-  reply.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  reply.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+fastify.addHook('onRequest', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', '*');
+  reply.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (request.method === 'OPTIONS') {
-    reply.statusCode = 204;
-    reply.end();
-    return;
+    reply.code(204).send();
   }
-
-  next();
 });
 
 const createAccessToken = (userId: string) => {
@@ -824,9 +812,10 @@ fastify.delete<AdDeleteRequest>('/ads/:id', (request, reply) => {
 });
 
 const port = Number(process.env.PORT ?? 8080);
+const host = process.env.HOST || '0.0.0.0';
 void bootstrapOllama();
 
-fastify.listen({ port }, function (err, _address) {
+fastify.listen({ port, host }, function (err, address) {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
