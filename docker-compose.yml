@@ -7,7 +7,12 @@ services:
     environment:
       PORT: 8080
       HOST: 0.0.0.0
-      OLLAMA_HOST: http://host.docker.internal:11434
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen3:4b
+    depends_on:
+      - ollama
 
   frontend:
     build:
@@ -18,3 +23,13 @@ services:
       VITE_API_URL: http://localhost:8080
     depends_on:
       - server
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:

@@ -408,51 +408,7 @@ fastify.get('/user/profile', (request, reply) => {
   return toPublicUser(user);
 });
 
-fastify.post('/ai/description', async (request, reply) => {
-  const currentUser = extractUserFromRequest(request);
 
-  if (!currentUser) {
-    reply.status(401).send({ success: false, error: 'Unauthorized' });
-    return;
-  }
-
-  const body = request.body as {
-    title?: string;
-    category?: string;
-    price?: string | number;
-    params?: Record<string, unknown>;
-    description?: string;
-  };
-  const taskText = body.description?.trim()
-    ? 'Улучши описание этого объявления'
-    : 'Сгенерируй описание для этого объявления';
-
-  const prompt = `
-    ${taskText} для Авито.
-
-    Ты помогаешь писать тексты для объявлений.
-    Пиши по-русски, связно и естественно.
-    Сделай 5-7 предложений, 450-700 символов.
-    Не выдумывай факты.
-
-    Категория: ${body.category ?? 'Не указано'}
-    Название: ${body.title ?? 'Не указано'}
-    Цена: ${body.price ?? 'Не указана'}
-    Характеристики:
-    ${buildParamsText(body.params)}
-
-    Текущее описание:
-    ${body.description?.trim() || 'Описание отсутствует'}
-  `.trim();
-
-  try {
-    const aiResponse = await generateWithOllama(prompt);
-    return { response: aiResponse };
-  } catch (error) {
-    fastify.log.warn({ error }, 'Ошибка запроса к Ollama (description)');
-    reply.status(502).send({ success: false, error: 'AI service is unavailable' });
-  }
-});
 
 fastify.post('/ai/price', async (request, reply) => {
   const currentUser = extractUserFromRequest(request);
@@ -470,40 +426,65 @@ fastify.post('/ai/price', async (request, reply) => {
   };
 
   const prompt = `
-    Ты помогаешь оценить ориентировочную рыночную стоимость объявления для маркетплейса.
+Ты помогаешь оценить ориентировочную рыночную стоимость объявления для маркетплейса.
 
-    Важно:
-    - не проверяй, существует ли модель в реальности;
-    - не отказывайся от оценки, даже если название выглядит необычным, новым или вымышленным;
-    - не возвращай цену 0, если товар в принципе не является бесплатным;
-    - если данных мало, всё равно предложи реалистичную ориентировочную цену;
-    - опирайся на категорию, название, характеристики и текущую цену как на слабый ориентир;
-    - если модель спорная, оцени цену по классу товара, уровню бренда и заявленным характеристикам.
+Данные объявления:
+Категория: ${body.category ?? 'Не указано'}
+Название: ${body.title ?? 'Не указано'}
+Текущая цена: ${body.price ?? 'Не указана'}
+Характеристики:
+${buildParamsText(body.params)}
 
-    Цена должна быть в рублях.
-
-    Верни ответ строго в таком формате:
-
-    Предполагаемая цена: <целое число с пробелами и знаком ₽>
-    Краткий комментарий на 3-5 строк:
-    - какой это сегмент товара;
-    - что сильнее всего влияет на цену;
-    - почему выбран именно такой ориентир;
-    - если данных мало, укажи это, но всё равно дай цену.
-
-    Данные объявления:
-    Категория: ${body.category ?? 'Не указано'}
-    Название: ${body.title ?? 'Не указано'}
-    Текущая цена: ${body.price ?? 'Не указана'}
-    Характеристики:
-    ${buildParamsText(body.params)}
-  `.trim();
+Верни предполагаемую цену в рублях и короткий комментарий.
+`.trim();
 
   try {
     const aiResponse = await generateWithOllama(prompt);
     return { response: aiResponse };
   } catch (error) {
     fastify.log.warn({ error }, 'Ошибка запроса к Ollama (price)');
+    reply.status(502).send({ success: false, error: 'AI service is unavailable' });
+  }
+});
+
+fastify.post('/ai/description', async (request, reply) => {
+  const currentUser = extractUserFromRequest(request);
+
+  if (!currentUser) {
+    reply.status(401).send({ success: false, error: 'Unauthorized' });
+    return;
+  }
+
+  const body = request.body as {
+    title?: string;
+    category?: string;
+    price?: string | number;
+    params?: Record<string, unknown>;
+    description?: string;
+  };
+
+  const taskText = body.description?.trim()
+    ? 'Улучши описание этого объявления'
+    : 'Сгенерируй описание для этого объявления';
+
+  const prompt = `
+${taskText}.
+
+Категория: ${body.category ?? 'Не указано'}
+Название: ${body.title ?? 'Не указано'}
+Цена: ${body.price ?? 'Не указана'}
+Характеристики:
+${buildParamsText(body.params)}
+
+Текущее описание:
+${body.description?.trim() || 'Описание отсутствует'}
+`.trim();
+
+  try {
+    const aiResponse = await generateWithOllama(prompt);
+    return { response: aiResponse };
+  } catch (error) {
+    fastify.log.warn({ error }, 'Ошибка запроса к Ollama (description)');
     reply.status(502).send({ success: false, error: 'AI service is unavailable' });
   }
 });
@@ -525,35 +506,29 @@ fastify.post('/ai/analyze', async (request, reply) => {
   };
 
   const prompt = `
-    Проведи анализ качества объявления для маркетплейса и верни ответ строго в JSON.
+Проведи анализ качества объявления для маркетплейса и верни ответ строго в JSON.
 
-    Формат JSON:
-    {
-      "summary": "краткий итог в 1-2 предложениях",
-      "strengths": ["сильная сторона 1", "сильная сторона 2"],
-      "weaknesses": ["слабая сторона 1", "слабая сторона 2"],
-      "recommendations": ["рекомендация 1", "рекомендация 2"]
-    }
+Формат JSON:
+{
+  "summary": "краткий итог в 1-2 предложениях",
+  "strengths": ["сильная сторона 1", "сильная сторона 2"],
+  "weaknesses": ["слабая сторона 1", "слабая сторона 2"],
+  "recommendations": ["рекомендация 1", "рекомендация 2"]
+}
 
-    Требования:
-    - Пиши на русском.
-    - Не добавляй markdown, комментарии или текст вне JSON.
-    - В каждом массиве 2-4 коротких пункта.
-    - Учитывай контекст категории и параметры.
-    - Не выдумывай факты, которых нет в объявлении.
-
-    Данные объявления:
-    Категория: ${body.category ?? 'Не указано'}
-    Название: ${body.title ?? 'Не указано'}
-    Цена: ${body.price ?? 'Не указана'}
-    Описание: ${body.description?.trim() || 'Не указано'}
-    Характеристики:
-    ${buildParamsText(body.params)}
-  `.trim();
+Данные объявления:
+Категория: ${body.category ?? 'Не указано'}
+Название: ${body.title ?? 'Не указано'}
+Цена: ${body.price ?? 'Не указана'}
+Описание: ${body.description?.trim() || 'Не указано'}
+Характеристики:
+${buildParamsText(body.params)}
+`.trim();
 
   try {
-    const aiResponse = await generateWithOllama(prompt);
-    return parseAnalyzeResponse(aiResponse);
+    const rawResponse = await generateWithOllama(prompt);
+    const aiResponse = rawResponse.replace(/\*\*/g, '').replace(/\*/g, '');
+    return { response: aiResponse };
   } catch (error) {
     fastify.log.warn({ error }, 'Ошибка запроса к Ollama (analyze)');
     reply.status(502).send({ success: false, error: 'AI service is unavailable' });
